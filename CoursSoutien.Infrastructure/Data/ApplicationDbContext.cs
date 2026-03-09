@@ -6,7 +6,7 @@ using CoursSoutien.Application.Interfaces;
 namespace CoursSoutien.Infrastructure.Data
 {
     public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : IdentityDbContext(options), IApplicationDbContext
+        : IdentityDbContext<ApplicationUser>(options), IApplicationDbContext
     {
         public DbSet<Subject> Subjects => Set<Subject>();
         public DbSet<EducationalLevel> EducationalLevels => Set<EducationalLevel>();

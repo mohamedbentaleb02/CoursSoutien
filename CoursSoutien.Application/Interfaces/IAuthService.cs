@@ -11,5 +11,6 @@ namespace CoursSoutien.Application.Interfaces
     {
         Task<string> RegisterAsync(RegisterDto request);
         Task<string> LoginAsync(LoginDto request);
+        Task<List<string>> GetAvailableRolesAsync();
     }
 }

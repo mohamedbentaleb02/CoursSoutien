@@ -13,12 +13,5 @@ namespace CoursSoutien.Domain.Entities
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        // Propriétés de navigation
-        // Si l'utilisateur est un professeur, il aura des sessions enseignées :
-        public ICollection<CourseSession> TaughtSessions { get; set; } = new List<CourseSession>();
-
-        // Si l'utilisateur est un étudiant, il aura des inscriptions :
-        public ICollection<Enrollment> Enrollments { get; set; } = new List<Enrollment>();
     }
 }

@@ -7,10 +7,15 @@ using Microsoft.IdentityModel.Tokens;
 using CoursSoutien.Application.Interfaces;
 using CoursSoutien.Application.DTOs;
 using CoursSoutien.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoursSoutien.Infrastructure.Services
 {
-    public class AuthService(UserManager<ApplicationUser> userManager, IConfiguration configuration) : IAuthService
+    public class AuthService(
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        IConfiguration configuration) 
+        : IAuthService
     {
         public async Task<string> RegisterAsync(RegisterDto request)
         {
@@ -22,12 +27,18 @@ namespace CoursSoutien.Infrastructure.Services
             {
                 Email = request.Email,
                 SecurityStamp = Guid.NewGuid().ToString(),
-                UserName = request.Email
+                UserName = request.Email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                PhoneNumber = request.PhoneNumber,
+                CreatedAt = DateTime.UtcNow 
             };
 
             var result = await userManager.CreateAsync(user, request.Password);
             if (!result.Succeeded)
-                throw new Exception("La création de l'utilisateur a échoué.");
+                throw new Exception("La création a échoué : " + string.Join(", ", result.Errors.Select(e => e.Description)));
+
+            await userManager.AddToRoleAsync(user, request.Role);
 
             return "Utilisateur créé avec succès !";
         }
@@ -38,12 +49,19 @@ namespace CoursSoutien.Infrastructure.Services
             if (user == null || !await userManager.CheckPasswordAsync(user, request.Password))
                 throw new UnauthorizedAccessException("Email ou mot de passe incorrect.");
 
+            var userRoles = await userManager.GetRolesAsync(user);
+
             var authClaims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
                 new Claim(ClaimTypes.Email, user.Email!),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            foreach (var role in userRoles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, role));
+            }
 
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!));
 
@@ -56,6 +74,12 @@ namespace CoursSoutien.Infrastructure.Services
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+        public async Task<List<string>> GetAvailableRolesAsync()
+        {
+            return await roleManager.Roles
+                .Select(r => r.Name!)
+                .ToListAsync();
         }
     }
 }

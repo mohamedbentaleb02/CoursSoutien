@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using CoursSoutien.Application.Interfaces;
 using CoursSoutien.Application.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CoursSoutien.API.Controllers
 {
@@ -8,6 +9,7 @@ namespace CoursSoutien.API.Controllers
     [Route("api/[controller]")]
     public class AuthController(IAuthService authService) : ControllerBase
     {
+        [Authorize(Roles = "Admin")]
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
@@ -38,6 +40,13 @@ namespace CoursSoutien.API.Controllers
             {
                 return BadRequest(new { Error = ex.Message });
             }
+        }
+        [Authorize(Roles = "Admin")]
+        [HttpGet("roles")]
+        public async Task<IActionResult> GetRoles()
+        {
+            var roles = await authService.GetAvailableRolesAsync();
+            return Ok(roles);
         }
     }
 }
